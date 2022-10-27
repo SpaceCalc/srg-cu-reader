@@ -1,5 +1,5 @@
 pyinstaller ^
---onefile --windowed ^
+--windowed ^
 --specpath spec ^
 --distpath spec/dist ^
 --workpath spec/build ^
