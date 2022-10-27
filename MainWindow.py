@@ -45,6 +45,8 @@ class MainWindow(QMainWindow):
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.closeTab)
         self.tabs_info:List[TabInfo] = []
+
+        self.setAcceptDrops(True)
         
         self.setCentralWidget(self.tabs)
 
@@ -158,3 +160,22 @@ class MainWindow(QMainWindow):
         
         with open(path, 'w') as file:
             file.write(item.editor.toPlainText())
+
+
+    def dragEnterEvent(self, a0: QDragEnterEvent) -> None:
+        """ Событие при перетягивании объектов в окно. """
+        if a0.mimeData().hasUrls():
+            if all(x.isLocalFile() for x in a0.mimeData().urls()):
+                a0.acceptProposedAction()
+
+    
+    def dropEvent(self, a0: QDropEvent) -> None:
+        """ Событие при сбросе объектов в окно. """
+        for path in (x.toLocalFile() for x in a0.mimeData().urls()):
+            try:
+                cu = SrgCuFile(path)
+            except:
+                QMessageBox.critical(self, 
+                    os.path.basename(path), 'Не удалось открыть файл.')
+            else:
+                self.addFile(cu.write_str(), path)
