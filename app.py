@@ -11,7 +11,7 @@ def main() -> None:
     app.setApplicationName('srg-cu-reader')
     app.setApplicationVersion('v1.0')
 
-    window = MainWindow()
+    window = MainWindow(sys.argv[1:])
     window.show()
 
     sys.exit(app.exec())

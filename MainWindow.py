@@ -18,7 +18,7 @@ class TabInfo:
 class MainWindow(QMainWindow):
     """ Главное окно. """
 
-    def __init__(self):
+    def __init__(self, paths:List[str] = []):
         super().__init__()
 
         # Заголовок, размер окна.
@@ -46,9 +46,13 @@ class MainWindow(QMainWindow):
         self.tabs.tabCloseRequested.connect(self.closeTab)
         self.tabs_info:List[TabInfo] = []
 
+        # Разрешить Drag&Drop.
         self.setAcceptDrops(True)
         
         self.setCentralWidget(self.tabs)
+
+        # Открыть файлы.
+        self.openFiles(paths)
 
 
     def addFile(self, text:str, path:str):
@@ -85,6 +89,18 @@ class MainWindow(QMainWindow):
         self.saveAsAction.setEnabled(True)
 
 
+    def openFiles(self, paths:List[str]):
+        """ Открыть файлы в приложении. """
+        for path in paths:
+            try:
+                cu = SrgCuFile(path)
+            except:
+                QMessageBox.critical(self, 
+                    os.path.basename(path), 'Не удалось открыть файл.')
+            else:
+                self.addFile(cu.write_str(), path)
+
+
     def onOpenAction(self):
         """ Открыте файла (Файл->Открыть или Ctrl+O). """
         # Прочитать кэш.
@@ -108,14 +124,7 @@ class MainWindow(QMainWindow):
         s.setValue('cache.openFileNames.dir', dir)
         s.setValue('cache.openFileNames.filter', selected_filter)
 
-        for path in paths:
-            try:
-                cu = SrgCuFile(path)
-            except:
-                QMessageBox.critical(self, 
-                    os.path.basename(path), 'Не удалось открыть файл.')
-            else:
-                self.addFile(cu.write_str(), path)
+        self.openFiles(paths)
 
 
     def closeTab(self, index:int):
@@ -171,11 +180,5 @@ class MainWindow(QMainWindow):
     
     def dropEvent(self, a0: QDropEvent) -> None:
         """ Событие при сбросе объектов в окно. """
-        for path in (x.toLocalFile() for x in a0.mimeData().urls()):
-            try:
-                cu = SrgCuFile(path)
-            except:
-                QMessageBox.critical(self, 
-                    os.path.basename(path), 'Не удалось открыть файл.')
-            else:
-                self.addFile(cu.write_str(), path)
+        paths = [x.toLocalFile() for x in a0.mimeData().urls()]
+        self.openFiles(paths)
