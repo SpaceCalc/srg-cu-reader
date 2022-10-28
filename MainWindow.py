@@ -5,8 +5,6 @@ from PyQt5.QtWidgets import *
 import os
 from typing import List
 from cu import SrgCuFile
-import socket
-import threading
 
 
 @dataclass
@@ -55,8 +53,6 @@ class MainWindow(QMainWindow):
 
         # Открыть файлы.
         self.openFiles(paths)
-
-        self.startListen()
 
 
     def addFile(self, text:str, path:str):
@@ -186,31 +182,3 @@ class MainWindow(QMainWindow):
         """ Событие при сбросе объектов в окно. """
         paths = [x.toLocalFile() for x in a0.mimeData().urls()]
         self.openFiles(paths)
-
-
-    def listen(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('127.0.0.1', 13666))
-            s.listen()
-            conn, addr = s.accept()
-            print('connected:', addr)
-            with conn:
-                while True:
-                    data = conn.recv(1)
-                    if not data:
-                        break
-                    count = int.from_bytes(data, 'big')
-                    print('received', data, 'as', count)
-
-                    data = conn.recv(count)
-                    if not data:
-                        break
-                    
-                    files = data.decode('utf8').split(';')
-                    print('received', data, 'as', files)
-
-                    s.close()
-
-    def startListen(self):
-        thread = threading.Thread(target=self.listen)
-        thread.start()
